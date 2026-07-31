@@ -117,7 +117,7 @@ def scrape_via_dom(page):
         # Read the raw text once, sanitize it immediately, then let it go out
         # of scope — the raw address text (which may contain a street and
         # postcode for personal locations) is never stored.
-        raw_location_text = location_link.inner_text() if location_link else ""
+        raw_location_text = location_link.text_content() if location_link else ""
         personal_location_guess = sanitize_personal_location(raw_location_text)
 
         birds.append({
