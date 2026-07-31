@@ -77,8 +77,35 @@ def scrape_via_dom(page):
             "commonName": name_el.inner_text().strip(),
             "speciesCode": code_el.get_attribute("data-species-code"),
             "dateFirstHeard": date_iso,
-            "location": location_els[0].inner_text().strip() if location_els else "",
+            "regionCode": location_els[1].inner_text().strip() if len(location_els) > 1 else "",
         })
+
+    return birds
+
+
+def enrich_with_region_names(birds, api_key):
+    """Converts eBird region codes (e.g. 'GB-ENG') into readable names
+    (e.g. 'England, United Kingdom') via eBird's public region reference API —
+    sanctioned, key-based, general geography data rather than personal data."""
+    codes = sorted(set(b["regionCode"] for b in birds if b.get("regionCode")))
+    name_map = {}
+
+    for code in codes:
+        try:
+            resp = requests.get(
+                f"https://api.ebird.org/v2/ref/region/info/{code}",
+                headers={"X-eBirdApiToken": api_key},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            name_map[code] = resp.json().get("result", code)
+        except requests.RequestException:
+            name_map[code] = code  # fall back to the raw code if lookup fails
+        time.sleep(0.3)
+
+    for bird in birds:
+        bird["location"] = name_map.get(bird.get("regionCode"), "")
+        del bird["regionCode"]
 
     return birds
 
@@ -144,6 +171,7 @@ def main():
         sys.exit(1)
 
     birds = enrich_with_taxonomy(birds, api_key)
+    birds = enrich_with_region_names(birds, api_key)
 
     with open(OUTPUT_PATH, "w") as f:
         json.dump(birds, f, indent=2)
