@@ -118,7 +118,6 @@ def scrape_via_dom(page):
         # of scope — the raw address text (which may contain a street and
         # postcode for personal locations) is never stored.
         raw_location_text = location_link.text_content() if location_link else ""
-        print(f"DEBUG [{name_el.inner_text().strip()}]: {raw_location_text!r}", file=sys.stderr)
         personal_location_guess = sanitize_personal_location(raw_location_text)
 
         birds.append({
