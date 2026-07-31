@@ -19,6 +19,7 @@ import os
 import sys
 import json
 import time
+import re
 from datetime import datetime
 import requests
 from playwright.sync_api import sync_playwright
@@ -73,39 +74,72 @@ def scrape_via_dom(page):
         except ValueError:
             date_iso = date_text  # fall back to raw text if format ever changes
 
+        location_link = location_els[0] if location_els else None
+        loc_id = None
+        if location_link:
+            href = location_link.get_attribute("href") or ""
+            match = re.search(r"r=(L\d+)", href)
+            if match:
+                loc_id = match.group(1)
+
         birds.append({
             "commonName": name_el.inner_text().strip(),
             "speciesCode": code_el.get_attribute("data-species-code"),
             "dateFirstHeard": date_iso,
-            "regionCode": location_els[1].inner_text().strip() if len(location_els) > 1 else "",
+            "locId": loc_id,
         })
 
     return birds
 
 
-def enrich_with_region_names(birds, api_key):
-    """Converts eBird region codes (e.g. 'GB-ENG') into readable names
-    (e.g. 'England, United Kingdom') via eBird's public region reference API —
-    sanctioned, key-based, general geography data rather than personal data."""
-    codes = sorted(set(b["regionCode"] for b in birds if b.get("regionCode")))
-    name_map = {}
+def enrich_with_location_names(birds, api_key):
+    """Resolves each hotspot ID to coordinates via eBird's public hotspot
+    reference API, then reverse-geocodes those coordinates via OpenStreetMap's
+    free Nominatim service to get village/town, county, and country."""
+    loc_ids = sorted(set(b["locId"] for b in birds if b.get("locId")))
+    location_map = {}
 
-    for code in codes:
+    for loc_id in loc_ids:
         try:
-            resp = requests.get(
-                f"https://api.ebird.org/v2/ref/region/info/{code}",
+            hotspot_resp = requests.get(
+                f"https://api.ebird.org/v2/ref/hotspot/info/{loc_id}",
                 headers={"X-eBirdApiToken": api_key},
                 timeout=15,
             )
-            resp.raise_for_status()
-            name_map[code] = resp.json().get("result", code)
+            hotspot_resp.raise_for_status()
+            hotspot = hotspot_resp.json()
+            lat, lng = hotspot.get("latitude"), hotspot.get("longitude")
+
+            if lat is None or lng is None:
+                location_map[loc_id] = ""
+                continue
+
+            time.sleep(1)  # Nominatim's usage policy caps at 1 request/second
+            geo_resp = requests.get(
+                "https://nominatim.openstreetmap.org/reverse",
+                params={"format": "jsonv2", "lat": lat, "lon": lng, "zoom": 14, "addressdetails": 1},
+                headers={"User-Agent": "BirdList-personal-app (github.com/olipollock/BirdList)"},
+                timeout=15,
+            )
+            geo_resp.raise_for_status()
+            address = geo_resp.json().get("address", {})
+
+            settlement = (
+                address.get("village") or address.get("town") or
+                address.get("city") or address.get("suburb") or
+                address.get("hamlet") or ""
+            )
+            county = address.get("county") or address.get("state_district") or ""
+            country = address.get("country") or ""
+
+            location_map[loc_id] = ", ".join(part for part in [settlement, county, country] if part)
+
         except requests.RequestException:
-            name_map[code] = code  # fall back to the raw code if lookup fails
-        time.sleep(0.3)
+            location_map[loc_id] = ""
 
     for bird in birds:
-        bird["location"] = name_map.get(bird.get("regionCode"), "")
-        del bird["regionCode"]
+        bird["location"] = location_map.get(bird.get("locId"), "")
+        del bird["locId"]
 
     return birds
 
@@ -171,7 +205,7 @@ def main():
         sys.exit(1)
 
     birds = enrich_with_taxonomy(birds, api_key)
-    birds = enrich_with_region_names(birds, api_key)
+    birds = enrich_with_location_names(birds, api_key)
 
     with open(OUTPUT_PATH, "w") as f:
         json.dump(birds, f, indent=2)
