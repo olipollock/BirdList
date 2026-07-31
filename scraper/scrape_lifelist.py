@@ -51,167 +51,28 @@ def scroll_to_load_all(page, max_scrolls=40):
         page.wait_for_timeout(600)
 
 
-def scrape_via_dom(page):
-    page.goto(EBIRD_LIFELIST_URL)
-    page.wait_for_selector("li.Observation", timeout=20000)
-    scroll_to_load_all(page)
+def sanitize_personal_location(raw_text):
+    """Given the visible text of a personal (non-hotspot) location link,
+    keeps only the town/region/country portion and discards the rest.
 
-    rows = page.query_selector_all("li.Observation")
-    birds = []
+    eBird formats a personal location's saved address as multiple lines,
+    e.g.:
+        12 Example House, Sample Lane   <- street/house: DISCARDED
+        Anytown                         <- town: kept
+        England                         <- region: kept
+        AB1 2CD                         <- postcode: DISCARDED
+        United Kingdom                  <- country: kept
 
-    for row in rows:
-        name_el = row.query_selector(".Heading-main")
-        code_el = row.query_selector("a[data-species-code]")
-        date_el = row.query_selector(".Observation-meta-date a")
-        location_els = row.query_selector_all(".Observation-meta-location a")
+    The raw_text passed in is never stored anywhere — this function reads it
+    once, extracts only the safe middle portion, and returns that. The
+    caller must not retain raw_text after calling this.
+    """
+    if not raw_text:
+        return None
+    lines = [line.strip() for line in raw_text.split("\n") if line.strip()]
+    if len(lines) <= 1:
+        return None  # single-line label — ambiguous, safer to skip entirely
 
-        if not name_el or not code_el:
-            continue
+    remaining = lines[1:]  # drop the first line (street/house — most identifying)
 
-        date_text = date_el.inner_text().strip() if date_el else ""
-        try:
-            date_iso = datetime.strptime(date_text, "%d %b %Y").strftime("%Y-%m-%d")
-        except ValueError:
-            date_iso = date_text  # fall back to raw text if format ever changes
-
-        location_link = location_els[0] if location_els else None
-        loc_id = None
-        if location_link:
-            href = location_link.get_attribute("href") or ""
-            match = re.search(r"r=(L\d+)", href)
-            if match:
-                loc_id = match.group(1)
-
-        birds.append({
-            "commonName": name_el.inner_text().strip(),
-            "speciesCode": code_el.get_attribute("data-species-code"),
-            "dateFirstHeard": date_iso,
-            "locId": loc_id,
-        })
-
-    return birds
-
-
-def enrich_with_location_names(birds, api_key):
-    """Resolves each hotspot ID to coordinates via eBird's public hotspot
-    reference API, then reverse-geocodes those coordinates via OpenStreetMap's
-    free Nominatim service to get village/town, county, and country."""
-    loc_ids = sorted(set(b["locId"] for b in birds if b.get("locId")))
-    location_map = {}
-
-    for loc_id in loc_ids:
-        try:
-            hotspot_resp = requests.get(
-                f"https://api.ebird.org/v2/ref/hotspot/info/{loc_id}",
-                headers={"X-eBirdApiToken": api_key},
-                timeout=15,
-            )
-            hotspot_resp.raise_for_status()
-            hotspot = hotspot_resp.json()
-            lat, lng = hotspot.get("latitude"), hotspot.get("longitude")
-
-            if lat is None or lng is None:
-                location_map[loc_id] = ""
-                continue
-
-            time.sleep(1)  # Nominatim's usage policy caps at 1 request/second
-            geo_resp = requests.get(
-                "https://nominatim.openstreetmap.org/reverse",
-                params={"format": "jsonv2", "lat": lat, "lon": lng, "zoom": 14, "addressdetails": 1},
-                headers={"User-Agent": "BirdList-personal-app (github.com/olipollock/BirdList)"},
-                timeout=15,
-            )
-            geo_resp.raise_for_status()
-            address = geo_resp.json().get("address", {})
-
-            settlement = (
-                address.get("village") or address.get("town") or
-                address.get("city") or address.get("suburb") or
-                address.get("hamlet") or ""
-            )
-            county = address.get("county") or address.get("state_district") or ""
-            country = address.get("country") or ""
-
-            location_map[loc_id] = ", ".join(part for part in [settlement, county, country] if part)
-
-        except requests.RequestException:
-            location_map[loc_id] = ""
-
-    for bird in birds:
-        bird["location"] = location_map.get(bird.get("locId"), "")
-        del bird["locId"]
-
-    return birds
-
-
-def enrich_with_taxonomy(birds, api_key):
-    """Looks up scientific name, family, and order for each species code via
-    eBird's public taxonomy reference API — sanctioned, key-based, no login."""
-    codes = [b["speciesCode"] for b in birds if b.get("speciesCode")]
-    taxonomy_map = {}
-
-    # Batch in chunks to keep the URL a reasonable length
-    chunk_size = 100
-    for i in range(0, len(codes), chunk_size):
-        chunk = codes[i:i + chunk_size]
-        resp = requests.get(
-            TAXONOMY_API_URL,
-            params={"species": ",".join(chunk), "fmt": "json"},
-            headers={"X-eBirdApiToken": api_key},
-            timeout=30,
-        )
-        resp.raise_for_status()
-        for entry in resp.json():
-            taxonomy_map[entry["speciesCode"]] = {
-                "scientificName": entry.get("sciName", ""),
-                "family": entry.get("familyComName", entry.get("familySciName", "")),
-                "order": entry.get("order", ""),
-            }
-        time.sleep(0.5)  # be polite to the API
-
-    for bird in birds:
-        tax = taxonomy_map.get(bird.get("speciesCode"), {})
-        bird["scientificName"] = tax.get("scientificName", "")
-        bird["family"] = tax.get("family", "")
-        bird["order"] = tax.get("order", "")
-        del bird["speciesCode"]  # not needed in the final output
-
-    return birds
-
-
-def main():
-    email = os.environ.get("EBIRD_EMAIL")
-    password = os.environ.get("EBIRD_PASSWORD")
-    api_key = os.environ.get("EBIRD_API_KEY")
-
-    if not email or not password:
-        print("Missing EBIRD_EMAIL / EBIRD_PASSWORD environment variables.", file=sys.stderr)
-        sys.exit(1)
-    if not api_key:
-        print("Missing EBIRD_API_KEY environment variable.", file=sys.stderr)
-        sys.exit(1)
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-
-        login(page, email, password)
-        birds = scrape_via_dom(page)
-
-        browser.close()
-
-    if not birds:
-        print("No birds scraped — eBird's page structure may have changed.", file=sys.stderr)
-        sys.exit(1)
-
-    birds = enrich_with_taxonomy(birds, api_key)
-    birds = enrich_with_location_names(birds, api_key)
-
-    with open(OUTPUT_PATH, "w") as f:
-        json.dump(birds, f, indent=2)
-
-    print(f"Wrote {len(birds)} species to {OUTPUT_PATH} at {datetime.utcnow().isoformat()}")
-
-
-if __name__ == "__main__":
-    main()
+    def looks_like_postcode(line):
