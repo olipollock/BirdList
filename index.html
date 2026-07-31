@@ -90,19 +90,21 @@
     overflow: hidden;
   }
 
-  .illustration{
+.illustration{
     position: relative;
-    height: 170px;
+    height: 220px;
     background: linear-gradient(180deg, #A9C47E 0%, #7FA05A 55%, #5C7A3E 100%);
     overflow: hidden;
-  }
-  .illustration img{
+}
+.illustration img{
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center 30%;
     display: block;
     opacity: 0;
     transition: opacity 0.4s ease;
+}
   }
   .illustration img.loaded{ opacity: 1; }
 
