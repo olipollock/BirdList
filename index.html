@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life List</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,700;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --moss: #33472F;
+    --moss-deep: #24331F;
+    --cream: #F1E7CF;
+    --ink: #2A2620;
+    --gold: #C9A227;
+    --crest: #B8272C;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    background: radial-gradient(circle at 30% 0%, #3E4A34 0%, #1B2318 60%);
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--cream);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header{
+    text-align: center;
+    padding: 48px 20px 24px;
+  }
+
+  header h1{
+    font-family: 'Bitter', serif;
+    font-size: clamp(28px, 5vw, 42px);
+    margin: 0 0 6px;
+    color: var(--cream);
+  }
+
+  header p{
+    margin: 0;
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+  }
+
+  .controls{
+    max-width: 720px;
+    margin: 28px auto 8px;
+    display: flex;
+    gap: 10px;
+    padding: 0 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .controls input, .controls select{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(201,162,39,0.4);
+    background: rgba(255,255,255,0.06);
+    color: var(--cream);
+    outline: none;
+  }
+  .controls input::placeholder{ color: rgba(241,231,207,0.5); }
+  .controls input{ flex: 1; min-width: 200px; }
+
+  .grid{
+    max-width: 1200px;
+    margin: 32px auto 0;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px;
+  }
+
+  .card{
+    background: var(--moss);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 20px 40px -18px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,162,39,0.12);
+  }
+  .card-inner{
+    background: var(--moss-deep);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+
+  .illustration{
+    position: relative;
+    height: 170px;
+    background: linear-gradient(180deg, #A9C47E 0%, #7FA05A 55%, #5C7A3E 100%);
+    overflow: hidden;
+  }
+  .illustration img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .illustration img.loaded{ opacity: 1; }
+
+  .attribution{
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.65), transparent);
+    color: var(--cream);
+    font-size: 7px;
+    padding: 10px 6px 3px;
+    text-align: right;
+  }
+  .attribution a{ color: var(--cream); }
+
+  .plate{ background: var(--cream); padding: 12px 14px 8px; }
+
+  .eyebrow{
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--crest);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .name{
+    font-family: 'Bitter', serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--ink);
+    margin: 2px 0 0;
+    line-height: 1.15;
+  }
+  .latin{
+    font-family: 'Bitter', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: #5a5546;
+    margin: 2px 0 8px;
+  }
+  .divider{ border: none; border-top: 1px solid rgba(42,38,32,0.18); margin: 6px 0; }
+
+  .stats{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+    font-size: 9.5px;
+    color: var(--ink);
+  }
+  .stat-label{
+    display: block;
+    color: #6b6552;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 1px;
+  }
+  .stat-value{ font-weight: 600; }
+
+  .empty{
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(241,231,207,0.6);
+    font-size: 13px;
+  }
+
+  .count-pill{
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--cream);
+    background: rgba(201,162,39,0.18);
+    border: 1px solid rgba(201,162,39,0.4);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Life List</h1>
+  <p id="subtitle">Loading your species…</p>
+</header>
+
+<div class="controls">
+  <input type="text" id="searchBox" placeholder="Search by name…">
+  <select id="familyFilter">
+    <option value="">All families</option>
+  </select>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="emptyState" style="display:none;">No birds match that search.</div>
+
+<script>
+let allBirds = [];
+
+async function loadData(){
+  try {
+    const res = await fetch('data/lifelist.json');
+    allBirds = await res.json();
+  } catch (err) {
+    document.getElementById('subtitle').textContent = 'Could not load life list data.';
+    return;
+  }
+  document.getElementById('subtitle').innerHTML =
+    `<span class="count-pill">${allBirds.length} species logged</span>`;
+  populateFamilyFilter(allBirds);
+  renderGrid(allBirds);
+}
+
+function populateFamilyFilter(birds){
+  const families = [...new Set(birds.map(b => b.family))].sort();
+  const select = document.getElementById('familyFilter');
+  families.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    opt.textContent = f;
+    select.appendChild(opt);
+  });
+}
+
+function renderGrid(birds){
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('emptyState');
+  grid.innerHTML = '';
+
+  if (birds.length === 0){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  birds.forEach(bird => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="illustration">
+          <img alt="${bird.commonName}">
+          <div class="attribution"></div>
+        </div>
+        <div class="plate">
+          <div class="eyebrow">${bird.order} · ${bird.family}</div>
+          <h2 class="name">${bird.commonName}</h2>
+          <p class="latin">${bird.scientificName}</p>
+          <hr class="divider">
+          <div class="stats">
+            <div><span class="stat-label">Date heard</span><span class="stat-value">${formatDate(bird.dateFirstHeard)}</span></div>
+            <div><span class="stat-label">Location</span><span class="stat-value">${bird.location}</span></div>
+            <div><span class="stat-label">Times logged</span><span class="stat-value">${bird.count}</span></div>
+            <div><span class="stat-label">ID method</span><span class="stat-value">${bird.idMethod}</span></div>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+    loadBirdPhoto(bird.scientificName, card.querySelector('img'), card.querySelector('.attribution'));
+  });
+}
+
+function formatDate(dateStr){
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+async function loadBirdPhoto(scientificName, imgEl, attributionEl){
+  try {
+    const summaryRes = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(scientificName)}&prop=pageimages&format=json&pithumbsize=500&redirects=1&origin=*`
+    );
+    const summaryData = await summaryRes.json();
+    const page = Object.values(summaryData.query.pages)[0];
+    const thumbUrl = page.thumbnail && page.thumbnail.source;
+    const filename = page.pageimage;
+
+    if (!thumbUrl){ attributionEl.textContent = 'No photo found'; return; }
+    imgEl.src = thumbUrl;
+    imgEl.onload = () => imgEl.classList.add('loaded');
+
+    if (filename){
+      const infoRes = await fetch(
+        `https://commons.wikimedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=extmetadata&format=json&origin=*`
+      );
+      const infoData = await infoRes.json();
+      const infoPage = Object.values(infoData.query.pages)[0];
+      const meta = infoPage.imageinfo && infoPage.imageinfo[0].extmetadata;
+      const artist = meta && meta.Artist ? meta.Artist.value.replace(/<[^>]+>/g, '').trim() : 'Unknown';
+      const license = meta && meta.LicenseShortName ? meta.LicenseShortName.value : '';
+      attributionEl.innerHTML = `${artist} · ${license}`;
+    }
+  } catch (err) {
+    attributionEl.textContent = 'Photo unavailable';
+  }
+}
+
+function applyFilters(){
+  const query = document.getElementById('searchBox').value.toLowerCase();
+  const family = document.getElementById('familyFilter').value;
+
+  const filtered = allBirds.filter(b => {
+    const matchesQuery = b.commonName.toLowerCase().includes(query) ||
+                          b.scientificName.toLowerCase().includes(query);
+    const matchesFamily = !family || b.family === family;
+    return matchesQuery && matchesFamily;
+  });
+  renderGrid(filtered);
+}
+
+document.getElementById('searchBox').addEventListener('input', applyFilters);
+document.getElementById('familyFilter').addEventListener('change', applyFilters);
+
+loadData();
+</script>
+</body>
+</html>
