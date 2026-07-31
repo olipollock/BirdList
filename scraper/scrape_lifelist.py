@@ -31,9 +31,9 @@ OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "lifelist.js
 
 def login(page, email, password):
     page.goto(EBIRD_LOGIN_URL)
-    page.fill("#username", email)
-    page.fill("#password", password)
-    page.click("button[type='submit']")
+    page.fill("#input-user-name", email)
+    page.fill("#input-password", password)
+    page.click("#form-submit")
     page.wait_for_url("https://ebird.org/**", timeout=20000)
 
 
