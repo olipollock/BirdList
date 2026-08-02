@@ -1,5 +1,21 @@
 [
   {
+    "commonName": "Tawny Owl",
+    "dateFirstHeard": "2026-08-01",
+    "scientificName": "Strix aluco",
+    "family": "Owls",
+    "order": "Strigiformes",
+    "location": "Kingsbridge, England, United Kingdom"
+  },
+  {
+    "commonName": "European Herring Gull",
+    "dateFirstHeard": "2026-08-01",
+    "scientificName": "Larus argentatus",
+    "family": "Gulls, Terns, and Skimmers",
+    "order": "Charadriiformes",
+    "location": "Kingsbridge, England, United Kingdom"
+  },
+  {
     "commonName": "Eurasian Magpie",
     "dateFirstHeard": "2026-07-31",
     "scientificName": "Pica pica",
