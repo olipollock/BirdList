@@ -1,5 +1,21 @@
 [
   {
+    "commonName": "Great Cormorant",
+    "dateFirstHeard": "2026-08-05",
+    "scientificName": "Phalacrocorax carbo",
+    "family": "Cormorants and Shags",
+    "order": "Suliformes",
+    "location": "England, United Kingdom"
+  },
+  {
+    "commonName": "Lesser Black-backed Gull",
+    "dateFirstHeard": "2026-08-04",
+    "scientificName": "Larus fuscus",
+    "family": "Gulls, Terns, and Skimmers",
+    "order": "Charadriiformes",
+    "location": "Thurlestone, Devon, United Kingdom"
+  },
+  {
     "commonName": "Meadow Pipit",
     "dateFirstHeard": "2026-08-02",
     "scientificName": "Anthus pratensis",
