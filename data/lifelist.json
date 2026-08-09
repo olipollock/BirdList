@@ -1,5 +1,21 @@
 [
   {
+    "commonName": "Stock Dove",
+    "dateFirstHeard": "2026-08-08",
+    "scientificName": "Columba oenas",
+    "family": "Pigeons and Doves",
+    "order": "Columbiformes",
+    "location": "Norwich, England, United Kingdom"
+  },
+  {
+    "commonName": "Mute Swan",
+    "dateFirstHeard": "2026-08-08",
+    "scientificName": "Cygnus olor",
+    "family": "Ducks, Geese, and Waterfowl",
+    "order": "Anseriformes",
+    "location": "North Norfolk, Norfolk, United Kingdom"
+  },
+  {
     "commonName": "Great Cormorant",
     "dateFirstHeard": "2026-08-05",
     "scientificName": "Phalacrocorax carbo",
