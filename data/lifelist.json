@@ -1,5 +1,13 @@
 [
   {
+    "commonName": "Rose-ringed Parakeet",
+    "dateFirstHeard": "2026-08-11",
+    "scientificName": "Psittacula krameri",
+    "family": "Old World Parrots",
+    "order": "Psittaciformes",
+    "location": "Greater London, United Kingdom"
+  },
+  {
     "commonName": "Gray Heron",
     "dateFirstHeard": "2026-08-09",
     "scientificName": "Ardea cinerea",
