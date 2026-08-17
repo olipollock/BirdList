@@ -398,5 +398,13 @@
     "family": "Old World Sparrows",
     "order": "Passeriformes",
     "location": "Grantham, England, United Kingdom"
+  },
+  {
+    "commonName": "Indian Peafowl",
+    "dateFirstHeard": "2026-08-16",
+    "scientificName": "Pavo cristatus",
+    "family": "Pheasants, Grouse, and Allies",
+    "order": "Galliformes",
+    "location": "Greater London, United Kingdom"
   }
 ]
