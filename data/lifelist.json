@@ -1,5 +1,13 @@
 [
   {
+    "commonName": "Hooded Crow",
+    "dateFirstHeard": "2026-09-07",
+    "scientificName": "Corvus cornix",
+    "family": "Crows, Jays, and Magpies",
+    "order": "Passeriformes",
+    "location": "Ireland"
+  },
+  {
     "commonName": "Rose-ringed Parakeet",
     "dateFirstHeard": "2026-08-11",
     "scientificName": "Psittacula krameri",
