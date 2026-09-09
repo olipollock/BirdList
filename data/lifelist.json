@@ -1,5 +1,29 @@
 [
   {
+    "commonName": "European Golden-Plover",
+    "dateFirstHeard": "2026-09-09",
+    "scientificName": "Pluvialis apricaria",
+    "family": "Plovers and Lapwings",
+    "order": "Charadriiformes",
+    "location": "Ireland"
+  },
+  {
+    "commonName": "Common Greenshank",
+    "dateFirstHeard": "2026-09-09",
+    "scientificName": "Tringa nebularia",
+    "family": "Sandpipers and Allies",
+    "order": "Charadriiformes",
+    "location": "Ireland"
+  },
+  {
+    "commonName": "Common Raven",
+    "dateFirstHeard": "2026-09-09",
+    "scientificName": "Corvus corax",
+    "family": "Crows, Jays, and Magpies",
+    "order": "Passeriformes",
+    "location": "Ireland"
+  },
+  {
     "commonName": "Hooded Crow",
     "dateFirstHeard": "2026-09-07",
     "scientificName": "Corvus cornix",
