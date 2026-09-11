@@ -1,5 +1,37 @@
 [
   {
+    "commonName": "Dunnock",
+    "dateFirstHeard": "2026-09-10",
+    "scientificName": "Prunella modularis",
+    "family": "Accentors",
+    "order": "Passeriformes",
+    "location": "Ireland"
+  },
+  {
+    "commonName": "Eurasian Curlew",
+    "dateFirstHeard": "2026-09-10",
+    "scientificName": "Numenius arquata",
+    "family": "Sandpipers and Allies",
+    "order": "Charadriiformes",
+    "location": "Ireland"
+  },
+  {
+    "commonName": "European Shag",
+    "dateFirstHeard": "2026-09-10",
+    "scientificName": "Gulosus aristotelis",
+    "family": "Cormorants and Shags",
+    "order": "Suliformes",
+    "location": "Ireland"
+  },
+  {
+    "commonName": "Great Black-backed Gull",
+    "dateFirstHeard": "2026-09-10",
+    "scientificName": "Larus marinus",
+    "family": "Gulls, Terns, and Skimmers",
+    "order": "Charadriiformes",
+    "location": "Ireland"
+  },
+  {
     "commonName": "European Golden-Plover",
     "dateFirstHeard": "2026-09-09",
     "scientificName": "Pluvialis apricaria",
