@@ -23,7 +23,7 @@ jobs:
           pip install -r scraper/requirements.txt
           playwright install chromium --with-deps
 
-            - name: Run scraper
+      - name: Run scraper
         env:
           EBIRD_EMAIL: ${{ secrets.EBIRD_EMAIL }}
           EBIRD_PASSWORD: ${{ secrets.EBIRD_PASSWORD }}
