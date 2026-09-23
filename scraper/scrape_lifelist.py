@@ -84,7 +84,11 @@ def sanitize_personal_location(raw_text):
 
 def scrape_via_dom(page):
     page.goto(EBIRD_LIFELIST_URL)
-    page.wait_for_selector("li.Observation", timeout=20000)
+    try:
+        page.wait_for_selector("li.Observation", timeout=20000)
+    except Exception:
+        page.screenshot(path="debug_failure.png", full_page=True)
+        raise
     scroll_to_load_all(page)
 
     rows = page.query_selector_all("li.Observation")
