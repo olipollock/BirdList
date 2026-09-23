@@ -23,12 +23,19 @@ jobs:
           pip install -r scraper/requirements.txt
           playwright install chromium --with-deps
 
-      - name: Run scraper
+            - name: Run scraper
         env:
           EBIRD_EMAIL: ${{ secrets.EBIRD_EMAIL }}
           EBIRD_PASSWORD: ${{ secrets.EBIRD_PASSWORD }}
           EBIRD_API_KEY: ${{ secrets.EBIRD_API_KEY }}
         run: python scraper/scrape_lifelist.py
+
+      - name: Upload debug screenshot if scraper failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshot
+          path: scraper/debug_failure.png
 
       - name: Commit updated data
         run: |
